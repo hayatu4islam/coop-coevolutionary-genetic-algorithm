@@ -5,7 +5,9 @@ The CCGA Experiment class is based on this.
 """
 
 from bitstring import BitArray
-from random import randint
+import numpy as np
+import random
+
 from individual import Individual
 
 from functions import (
@@ -50,13 +52,29 @@ class GAExperiment:
         """Number of individuals in a population"""
 
         self.evaluations = _evaluations
-        """The number of function evaluations completed during the experiment"""
+        """The number of function evaluations that should be completed during the experiment"""
+
+        self.evaluations_completed = 0
+        """The number of evaluations completed so far"""
 
         self.generation = 0
         """The current generation of population"""
 
         self.pop = self.get_starting_pop()
         """The population of BitArrays that are evolved during this experiment"""
+
+        self.scaling_window = [0] * 5
+        """A record of the worst fitness of the last 5 generations. Used as the 
+        baseline for comparing all other fitnesses.
+        """
+
+        self.fitness_data = []
+        """The data to be exported. The lowest fitness of each generation is added
+        to this array."""
+
+        self.evaluation_data = []
+        """An array containing the function evaluation number that each corresponding
+        element in fitness_data was collected."""
 
         # Update the fitnesses of the pops to prepare for the start of the algorithm
         self.update_fitnesses()
@@ -69,7 +87,7 @@ class GAExperiment:
 
         # Generate an array of definition strings with random starting numbers
         def_strings = [
-            def_format.format(randint(0, (2 ** (self.pop_width)) - 1))
+            def_format.format(random.randint(0, (2 ** (self.pop_width)) - 1))
             for i in range(self.pop_size)
         ]
 
@@ -95,9 +113,16 @@ class GAExperiment:
             bin_param_list = self.get_bin_params(ind)
 
             # Apply those parameters to the given fitness function
-            self.pop[i].fitness = self.fitness_func(bin_param_list, self.param_num)
+            ind.fitness = self.fitness_func(bin_param_list, self.param_num)
 
-    def get_bin_params(self, individual: BitArray):
+        # Update the track of the number of fitness evaluations completed
+        self.evaluations_completed += self.pop_size
+
+        # Add current best fitness to data capture
+        self.evaluation_data.append(self.evaluations_completed)
+        self.fitness_data.append(min(self.pop, key=lambda pop: pop.fitness))
+
+    def get_bin_params(self, individual: Individual):
         """Split the individual given into 16 bit chunks for the parameters
 
         :param individual: The BitArray that defines the individual.
@@ -113,13 +138,142 @@ class GAExperiment:
 
         return bin_params
 
-    # def run_experiment(self):
-    #     """Run the experiment up to a number of function evaluations given in
-    #     evaluations.
+    def run_experiment(self):
+        """Run the experiment up to a number of function evaluations given in
+        evaluations.
 
-    #     :param iterations: The number of function evaluations
-    #     :returns:
-    #     """
+        :param iterations: The number of function evaluations
+        :returns:
+        """
+
+        while self.evaluations_completed <= self.evaluations:
+
+            self.generation += 1
+            print("Generation {}".format(self.generation))
+
+            # Update scaling window from previous fitness update
+            self.scaling_window.pop()
+            self.scaling_window.insert(
+                0, max(self.pop, key=lambda pop: pop.fitness).fitness
+            )
+            self.scaling_factor = max(self.scaling_window)
+
+            # Generate new generation and replace the old one
+            self.pop = self.breed_new_population()
+
+            # Update fitness values
+            self.update_fitnesses()
+
+        return self.evaluation_data, self.fitness_data
+
+    def breed_new_population(self):
+        """Perform proportional fitness selection to generate the next generation.
+
+        Apply crossover to get a new individual and apply mutation to that individual.
+        Leave the most fit individual from the previous generation in the new generation.
+        """
+
+        # Declare a new array for the new population with space for the previous best
+        new_population = [Individual()] * (self.pop_size - 1)
+
+        # Generate the roulette wheel
+        roulette_wheel = self.get_roulette_wheel()
+
+        # Generate new individuals for the rest of the population
+        for i, ind in enumerate(new_population):
+
+            # Crossover chance of 0.6
+            if random.random() < 0.6:
+                ind1 = self.select_new_ind(roulette_wheel)
+                ind2 = self.select_new_ind(roulette_wheel)
+                new_ind = self.two_point_crossover(ind1, ind2)
+
+            else:
+                new_ind = self.select_new_ind(roulette_wheel)
+
+            new_population[i] = self.mutate(new_ind)
+
+        # Add the best pop from the previous generation
+        new_population.append(min(self.pop, key=lambda ind: ind.fitness))
+        return new_population
+
+    def get_roulette_wheel(self):
+        """Generate the proportional fitness roulette wheel for the current population
+
+        Perform a cumulative sum of the population fitnesses and divide the result
+        through by the max population. This will leave an array of floats between
+        0 and 1. By seeing where a random number in that range falls individuals
+        can be selected proportionally to their fitness.
+
+        Since a lower fitness value is better we use the scaling window in reverse,
+        subtracting the pop fitness from it. This makes smaller pops take up
+        bigger chunks of the wheel.
+        """
+
+        # Calculate the cumulative sum of all the population fitnesses
+        wheel = np.cumsum([self.scaling_factor - pop.fitness for pop in self.pop])
+        print(self.scaling_factor)
+        print([pop.bit_arr for pop in self.pop])
+        # Divide through by the highest value in the sum to make probability spread
+
+        print(wheel)
+
+        wheel = wheel / wheel[-1]
+
+        return wheel.tolist()
+
+    def select_new_ind(self, roulette_wheel: list):
+        """Select a new pop using proportional selection/roulette wheel.
+
+        Generate a random number between 0.0 and 1.0 and find the index this
+        falls within on the roulette wheel. Return the pop at this index.
+
+        This value is found by finding all values greater than the selected
+        value and finding the smallest of those. The index of that value is
+        then found in the roulette wheel.
+        """
+
+        # Get random float between 0.0 and 1.0
+        rand = random.random()
+
+        # Find the next value above that in the roulette wheel
+        next_wheel_val = min([i for i in roulette_wheel if i > rand])
+
+        # Get the index of that value in the wheel
+        ind_idx = roulette_wheel.index(next_wheel_val)
+
+        return self.pop[ind_idx]
+
+    def two_point_crossover(self, ind1: Individual, ind2: Individual) -> Individual:
+        """Perform two point crossover on two individuals and return the child
+
+        Two random numbers between 0 and pop_width are generated.
+        ind1 is copied to the child. The slice of ind2 between the two points is
+        spliced into the child.
+        """
+
+        cross_start = random.randint(0, self.pop_width)
+        cross_end = random.randint(0, self.pop_width)
+
+        # Clone first individual
+        child = ind1
+
+        # Splice in part of the second individual
+        child.bit_arr[cross_start:cross_end] = ind2.bit_arr[cross_start:cross_end]
+
+        return child
+
+    def mutate(self, ind: Individual):
+        """Mutate bits in ind with a chance of 1/len(ind)"""
+
+        # For every bit position in ind
+        for i in range(0, len(ind.bit_arr)):
+
+            # If mutation chance met, invert bit at that position
+            if random.random() < 1 / len(ind.bit_arr):
+                ind.bit_arr.invert(i)
+
+        return ind
 
 
 if __name__ == "__main__":
@@ -136,6 +290,14 @@ if __name__ == "__main__":
 
         # Test get update_fitness
         assert ind0.fitness == rastrigin(bin_params0, 5)
+
+        # Run Rastigin test
+        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 20)
+
+        rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
+
+        for evaluation, fitness in zip(rast_evalus, rast_fitness):
+            print(evaluation, "\t", fitness)
 
     except AssertionError as e:
         print("Assertion Failed!")
