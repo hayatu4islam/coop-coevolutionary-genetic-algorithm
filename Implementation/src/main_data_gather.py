@@ -70,10 +70,14 @@ def run_ccga_experiments():
 if __name__ == "__main__":
 
     # Run standard GA experiments
-    rast_iter, rast_avr_fitness = run_ga_experiment(rastrigin, rast_dict, 1000, 5)
-    schw_iter, schw_avr_fitness = run_ga_experiment(schwefel, schwe_dict, 1000, 5)
-    grie_iter, grie_avr_fitness = run_ga_experiment(griewangk, grie_dict, 1000, 5)
-    ackl_iter, ackl_avr_fitness = run_ga_experiment(ackley, ackl_dict, 1000, 5)
+    print("Rastrigin Experiment")
+    rast_iter, rast_avr_fitness = run_ga_experiment(rastrigin, rast_dict, 100000, 50)
+    print("Schwefel Experiment")
+    schw_iter, schw_avr_fitness = run_ga_experiment(schwefel, schwe_dict, 100000, 50)
+    print("Griewangk Experiment")
+    grie_iter, grie_avr_fitness = run_ga_experiment(griewangk, grie_dict, 100000, 50)
+    print("Ackley Experiment")
+    ackl_iter, ackl_avr_fitness = run_ga_experiment(ackley, ackl_dict, 100000, 50)
 
     # Write data to disk
     output_data_path = "collected_data\\ga\\"
