@@ -11,21 +11,10 @@ import matplotlib.pyplot as plt
 
 from individual import Individual
 
-from functions import (
-    rastrigin,
-    rast_dict,
-    schwefel,
-    schwe_dict,
-    griewangk,
-    grie_dict,
-    ackley,
-    ackl_dict,
-)
-
 
 class GAExperiment:
     def __init__(
-        self, _fitness_func, _func_dict, _func_param_num=-1, _evaluations=100000
+        self, _fitness_func, _func_dict, _evaluations=100000, _func_param_num=-1
     ):
 
         self.fitness_func = _fitness_func
@@ -43,13 +32,13 @@ class GAExperiment:
         """The number of function parameters stored in the geonome"""
 
         if _func_param_num == -1:
-            self.pop_width = 16 * self.func_dict.n
-            self.param_num = self.func_dict.n
+            self.pop_width = 16 * self.func_dict["n"]
+            self.param_num = self.func_dict["n"]
         else:
             self.pop_width = 16 * _func_param_num
             self.param_num = _func_param_num
 
-        self.pop_size = 10
+        self.pop_size = 100
         """Number of individuals in a population"""
 
         self.evaluations = _evaluations
@@ -271,11 +260,16 @@ class GAExperiment:
         return ind
 
 
+from functions import (
+    rastrigin,
+    rast_dict,
+)
+
 if __name__ == "__main__":
     # Run Some tests
     try:
         # Generate new experiment, check pop and fitness are generated right
-        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 5)
+        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 10, 5)
 
         # Test get_bin_params
         ind0 = rast_ga_exp.pop[0]
@@ -287,7 +281,7 @@ if __name__ == "__main__":
         assert ind0.fitness == rastrigin(bin_params0, 5)
 
         # Test two point crossover
-        rast_ga_exp_small = GAExperiment(rastrigin, rast_dict, 2)
+        rast_ga_exp_small = GAExperiment(rastrigin, rast_dict, 10, 2)
         print(
             rast_ga_exp_small.pop[0].bit_arr.bin,
         )
@@ -301,12 +295,12 @@ if __name__ == "__main__":
         )
 
         # Test Mutate
-        rast_ga_exp_big = GAExperiment(rastrigin, rast_dict, 20)
+        rast_ga_exp_big = GAExperiment(rastrigin, rast_dict, 10, 20)
         print(rast_ga_exp_big.pop[0].bit_arr)
         print(rast_ga_exp_big.mutate(rast_ga_exp_big.pop[0]).bit_arr)
 
         # Run Rastigin test
-        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 4, 1000)
+        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 1000, 4)
 
         rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
 
