@@ -56,13 +56,13 @@ class CCGAExperiment:
         self.best_ind_idxs = [0] * self.param_num
         """The indexes the best individuals in each population"""
 
-        self.pops_max_fitness = [10e50] * self.param_num
+        self.pops_best_fitness = [10e50] * self.param_num
         """The fitness of the values stored in best_ind_idxs, used for computing
         global fitness each generation"""
 
-        self.scaling_window = [0] * 5
-        """A record of the worst fitness of the last 5 generations. Used as the 
-        baseline for comparing all other fitnesses.
+        self.scaling_windows = [[0] * 5] * self.pop_num
+        """Records of the worst fitness in each pop for the last 5 generations. 
+        Used as the baseline for comparing all other fitnesses.
         """
 
         self.fitness_data = []
@@ -122,11 +122,9 @@ class CCGAExperiment:
                         random_param_set.append(rand_pop.bit_arr)
 
                 ind.fitness = self.fitness_func(random_param_set, self.param_num)
+                self.evaluations_completed += 1
 
-        # Update the number of function evaluations completed
-        self.evaluations_completed += self.pop_num * self.pop_size
-
-        # Find the best ind in each population and save its index and fitness
+        # Update the best fitness found for every population set
         self.update_best_inds()
 
     def update_best_inds(self):
@@ -138,11 +136,11 @@ class CCGAExperiment:
             best_ind = min(pop, key=lambda ind: ind.fitness)
 
             self.best_ind_idxs[pop_num] = pop.index(best_ind)
-            self.pops_max_fitness[pop_num] = best_ind.fitness
+            self.pops_best_fitness[pop_num] = best_ind.fitness
 
         # Add current best fitness to data capture
         self.evaluation_data.append(self.evaluations_completed)
-        self.fitness_data.append(min(self.pops_max_fitness))
+        self.fitness_data.append(min(self.pops_best_fitness))
 
     def update_fitnesses(self):
         """Update the fitness values for every individual in each pop in self.pops
@@ -170,38 +168,53 @@ class CCGAExperiment:
             for ind in pop:
                 best_inds_copy[pop_num] = ind.bit_arr
                 ind.fitness = self.fitness_func(best_inds_copy, self.param_num)
+                self.evaluations_completed += 1
 
-        # Update the list of best performers with values from this generation
+        # Update the best fitness found for every population set
         self.update_best_inds()
 
     def run_experiment(self):
         """Run the experiment up to a number of function evaluations given in
         evaluations.
-
-        :param iterations: The number of function evaluations
-        :returns:
         """
 
-        while self.evaluations_completed < self.evaluations:
+        try:
+            while self.evaluations_completed < self.evaluations:
 
-            self.generation += 1
+                self.generation += 1
+                print(
+                    "Generation ",
+                    self.generation,
+                    "\tEvaluations:",
+                    self.evaluations_completed,
+                )
 
-            # Update scaling window from previous fitness update
-            self.scaling_window.pop()
-            self.scaling_window.insert(
-                0, max(self.pop, key=lambda pop: pop.fitness).fitness
-            )
-            self.scaling_factor = max(self.scaling_window)
+                self.update_scaling_windows()
 
-            # Generate new generation and replace the old one
-            # self.pop = self.breed_new_population()
+                # Generate a new generation of each pop
+                for pop_num, pop in enumerate(self.pops):
+                    scaling_factor = max(self.scaling_windows[pop_num])
+                    self.pops[pop_num] = self.breed_new_population(pop, scaling_factor)
 
-            # Update fitness values
-            self.update_fitnesses()
+                # Update fitness values
+                self.update_fitnesses()
+
+        except KeyboardInterrupt:
+            print("Halting simulation...")
 
         return self.evaluation_data, self.fitness_data
 
-    def breed_new_population(self):
+    def update_scaling_windows(self):
+        """Update all scaling windows with the worst fitness value from each population
+        from the last generation.
+        """
+
+        # Update each scaling window from previous fitness update
+        for window, pop in zip(self.scaling_windows, self.pops):
+            window.pop()
+            window.insert(0, max(pop, key=lambda ind: ind.fitness).fitness)
+
+    def breed_new_population(self, pop, scaling_factor):
         """Perform proportional fitness selection to generate the next generation.
 
         Apply crossover to get a new individual and apply mutation to that individual.
@@ -212,27 +225,28 @@ class CCGAExperiment:
         new_population = []
 
         # Add the best pop from the previous generation
-        new_population.append(min(self.pop, key=lambda ind: ind.fitness))
+        new_population.append(min(pop, key=lambda ind: ind.fitness))
+
         # Generate the roulette wheel
-        roulette_wheel = self.get_roulette_wheel()
+        roulette_wheel = self.get_roulette_wheel(pop, scaling_factor)
 
         # Generate new individuals for the rest of the population
         for i in range(0, self.pop_size - 1):
 
             # Crossover chance of 0.6
             if random.random() < 0.6:
-                ind1 = self.select_new_ind(roulette_wheel)
-                ind2 = self.select_new_ind(roulette_wheel)
+                ind1 = self.select_new_ind(roulette_wheel, pop)
+                ind2 = self.select_new_ind(roulette_wheel, pop)
                 new_ind = self.two_point_crossover(ind1, ind2)
 
             else:
-                new_ind = self.select_new_ind(roulette_wheel)
+                new_ind = self.select_new_ind(roulette_wheel, pop)
 
             new_population.append(self.mutate(new_ind))
 
         return new_population.copy()
 
-    def get_roulette_wheel(self):
+    def get_roulette_wheel(self, pop, scaling_factor):
         """Generate the proportional fitness roulette wheel for the current population
 
         Perform a cumulative sum of the population fitnesses and divide the result
@@ -246,11 +260,11 @@ class CCGAExperiment:
         """
 
         # Calculate the cumulative sum of all the population fitnesses
-        wheel = np.cumsum([self.scaling_factor - pop.fitness for pop in self.pop])
+        wheel = np.cumsum([scaling_factor - ind.fitness for ind in pop])
 
         return wheel.tolist()
 
-    def select_new_ind(self, roulette_wheel: list):
+    def select_new_ind(self, roulette_wheel: list, pop: list):
         """Select a new pop using proportional selection/roulette wheel.
 
         Generate a random number between 0.0 and 1.0 and find the index this
@@ -270,7 +284,7 @@ class CCGAExperiment:
         # Create a new individual with the same genes to stop python assigning every
         # member of the population a link back to a single shared BitArray as their
         # genetic material.
-        return Individual(self.pop[ind_idx].bit_arr.copy())
+        return Individual(pop[ind_idx].bit_arr.copy())
 
     def two_point_crossover(self, ind1: Individual, ind2: Individual) -> Individual:
         """Perform two point crossover on two individuals and return the child
@@ -307,6 +321,8 @@ class CCGAExperiment:
 
 
 from functions import (
+    ackley,
+    ackl_dict,
     rastrigin,
     rast_dict,
 )
@@ -316,21 +332,29 @@ if __name__ == "__main__":
     try:
 
         # Test the start up of the experiment
-        rast_ccga = CCGAExperiment(rastrigin, rast_dict, 2000, 5)
+        rast_ccga = CCGAExperiment(rastrigin, rast_dict, 5000, 5)
 
         # Test the populations have been defined correctly
-        assert len(rast_ccga.pops) == 5
-        assert len(rast_ccga.pops[0]) == 100
+        # assert len(rast_ccga.pops) == 5
+        # assert len(rast_ccga.pops[0]) == 100
 
         # Test the best pops have been found correctly
         pop3 = rast_ccga.pops[3]
         pop3_best = min(pop3, key=lambda ind: ind.fitness)
 
         assert pop3.index(pop3_best) == rast_ccga.best_ind_idxs[3]
-        assert pop3_best.fitness == rast_ccga.pops_max_fitness[3]
+        assert pop3_best.fitness == rast_ccga.pops_best_fitness[3]
 
         # Test update fitness
         rast_ccga.update_fitnesses()
+
+        # Test run
+        rast_ccga = CCGAExperiment(ackley, ackl_dict, 100000)
+        evaluation_data, fitness_data = rast_ccga.run_experiment()
+
+        fig, ax = plt.subplots()
+        ax.plot(evaluation_data, fitness_data)
+        plt.show()
 
     except AssertionError as e:
         print("Assertion Failed!")
