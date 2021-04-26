@@ -7,6 +7,7 @@ The CCGA Experiment class is based on this.
 from bitstring import BitArray
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 from individual import Individual
 
@@ -48,7 +49,7 @@ class GAExperiment:
             self.pop_width = 16 * _func_param_num
             self.param_num = _func_param_num
 
-        self.pop_size = 100
+        self.pop_size = 10
         """Number of individuals in a population"""
 
         self.evaluations = _evaluations
@@ -120,7 +121,7 @@ class GAExperiment:
 
         # Add current best fitness to data capture
         self.evaluation_data.append(self.evaluations_completed)
-        self.fitness_data.append(min(self.pop, key=lambda pop: pop.fitness))
+        self.fitness_data.append(min(self.pop, key=lambda pop: pop.fitness).fitness)
 
     def get_bin_params(self, individual: Individual):
         """Split the individual given into 16 bit chunks for the parameters
@@ -146,10 +147,9 @@ class GAExperiment:
         :returns:
         """
 
-        while self.evaluations_completed <= self.evaluations:
+        while self.evaluations_completed < self.evaluations:
 
             self.generation += 1
-            print("Generation {}".format(self.generation))
 
             # Update scaling window from previous fitness update
             self.scaling_window.pop()
@@ -174,13 +174,15 @@ class GAExperiment:
         """
 
         # Declare a new array for the new population with space for the previous best
-        new_population = [Individual()] * (self.pop_size - 1)
+        new_population = []
 
+        # Add the best pop from the previous generation
+        new_population.append(min(self.pop, key=lambda ind: ind.fitness))
         # Generate the roulette wheel
         roulette_wheel = self.get_roulette_wheel()
 
         # Generate new individuals for the rest of the population
-        for i, ind in enumerate(new_population):
+        for i in range(0, self.pop_size - 1):
 
             # Crossover chance of 0.6
             if random.random() < 0.6:
@@ -191,11 +193,9 @@ class GAExperiment:
             else:
                 new_ind = self.select_new_ind(roulette_wheel)
 
-            new_population[i] = self.mutate(new_ind)
+            new_population.append(self.mutate(new_ind))
 
-        # Add the best pop from the previous generation
-        new_population.append(min(self.pop, key=lambda ind: ind.fitness))
-        return new_population
+        return new_population.copy()
 
     def get_roulette_wheel(self):
         """Generate the proportional fitness roulette wheel for the current population
@@ -212,13 +212,6 @@ class GAExperiment:
 
         # Calculate the cumulative sum of all the population fitnesses
         wheel = np.cumsum([self.scaling_factor - pop.fitness for pop in self.pop])
-        print(self.scaling_factor)
-        print([pop.bit_arr for pop in self.pop])
-        # Divide through by the highest value in the sum to make probability spread
-
-        print(wheel)
-
-        wheel = wheel / wheel[-1]
 
         return wheel.tolist()
 
@@ -234,15 +227,15 @@ class GAExperiment:
         """
 
         # Get random float between 0.0 and 1.0
-        rand = random.random()
-
-        # Find the next value above that in the roulette wheel
-        next_wheel_val = min([i for i in roulette_wheel if i > rand])
+        rand = random.random() * roulette_wheel[-1]
 
         # Get the index of that value in the wheel
-        ind_idx = roulette_wheel.index(next_wheel_val)
+        ind_idx = roulette_wheel.index(min([i for i in roulette_wheel if i >= rand]))
 
-        return self.pop[ind_idx]
+        # Create a new individual with the same genes to stop python assigning every
+        # member of the population a link back to a single shared BitArray as their
+        # genetic material.
+        return Individual(self.pop[ind_idx].bit_arr.copy())
 
     def two_point_crossover(self, ind1: Individual, ind2: Individual) -> Individual:
         """Perform two point crossover on two individuals and return the child
@@ -253,13 +246,15 @@ class GAExperiment:
         """
 
         cross_start = random.randint(0, self.pop_width)
-        cross_end = random.randint(0, self.pop_width)
+        cross_end = random.randint(cross_start, self.pop_width)
 
         # Clone first individual
-        child = ind1
+        child = Individual(ind1.bit_arr)
 
         # Splice in part of the second individual
-        child.bit_arr[cross_start:cross_end] = ind2.bit_arr[cross_start:cross_end]
+        child.bit_arr[cross_start:cross_end] = ind2.bit_arr[
+            cross_start:cross_end
+        ].copy()
 
         return child
 
@@ -270,7 +265,7 @@ class GAExperiment:
         for i in range(0, len(ind.bit_arr)):
 
             # If mutation chance met, invert bit at that position
-            if random.random() < 1 / len(ind.bit_arr):
+            if random.random() < (1 / len(ind.bit_arr)):
                 ind.bit_arr.invert(i)
 
         return ind
@@ -291,10 +286,35 @@ if __name__ == "__main__":
         # Test get update_fitness
         assert ind0.fitness == rastrigin(bin_params0, 5)
 
+        # Test two point crossover
+        rast_ga_exp_small = GAExperiment(rastrigin, rast_dict, 2)
+        print(
+            rast_ga_exp_small.pop[0].bit_arr.bin,
+        )
+        print(
+            rast_ga_exp_small.pop[1].bit_arr.bin,
+        )
+        print(
+            rast_ga_exp_small.two_point_crossover(
+                rast_ga_exp_small.pop[0], rast_ga_exp_small.pop[1]
+            ).bit_arr.bin
+        )
+
+        # Test Mutate
+        rast_ga_exp_big = GAExperiment(rastrigin, rast_dict, 20)
+        print(rast_ga_exp_big.pop[0].bit_arr)
+        print(rast_ga_exp_big.mutate(rast_ga_exp_big.pop[0]).bit_arr)
+
         # Run Rastigin test
-        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 20)
+        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 4, 1000)
 
         rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
+
+        fig, ax = plt.subplots()
+        ax.plot(rast_evalus, rast_fitness)
+        plt.show()
+
+        pop = rast_ga_exp.pop
 
         for evaluation, fitness in zip(rast_evalus, rast_fitness):
             print(evaluation, "\t", fitness)
