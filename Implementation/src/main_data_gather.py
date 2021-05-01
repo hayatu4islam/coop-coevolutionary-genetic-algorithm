@@ -102,65 +102,79 @@ def write_to_file(iter_data, avr_fitness_data, filepath):
         output_file.writelines(out_lines)
 
 
-def run_ccga_experiments():
-    """Runs all ccga experiments and saves results to disk"""
+def run_ga_experiments(experiment_num):
 
-    print("CCGA Not Yet Implemented!!")
+    print("GA Experiments")
+
+    # Run standard GA experiments
+    print("Rastrigin Experiment")
+    rast_iter, rast_avr_fitness = run_ga_experiment(
+        rastrigin, rast_dict, 100000, experiment_num
+    )
+
+    print("Schwefel Experiment")
+    schw_iter, schw_avr_fitness = run_ga_experiment(
+        schwefel, schwe_dict, 100000, experiment_num
+    )
+
+    print("Griewangk Experiment")
+    grie_iter, grie_avr_fitness = run_ga_experiment(
+        griewangk, grie_dict, 100000, experiment_num
+    )
+
+    print("Ackley Experiment")
+    ackl_iter, ackl_avr_fitness = run_ga_experiment(
+        ackley, ackl_dict, 100000, experiment_num
+    )
+
+    # Write data to disk
+    output_data_path = "collected_data\\ga\\"
+
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
+
+
+def run_ccga_experiments(experiment_num):
+
+    print("CCGA Experiments")
+
+    output_data_path = "collected_data\\ccga\\"
+
+    print("Rastrigin Experiment")
+    rast_iter, rast_avr_fitness = run_ccga_experiment(
+        rastrigin, rast_dict, 100000, experiment_num
+    )
+
+    print("Schwefel Experiment")
+    schw_iter, schw_avr_fitness = run_ccga_experiment(
+        schwefel, schwe_dict, 100000, experiment_num
+    )
+
+    print("Griewangk Experiment")
+    grie_iter, grie_avr_fitness = run_ccga_experiment(
+        griewangk, grie_dict, 100000, experiment_num
+    )
+
+    # Run standard GA experiments
+    print("Ackley Experiment")
+    ackl_iter, ackl_avr_fitness = run_ccga_experiment(
+        ackley, ackl_dict, 100000, experiment_num
+    )
+
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
 
 
 if __name__ == "__main__":
 
     # Run GA experiments if requested
     if sys.argv[1] in ["ga", "both"]:
-        print("GA Experiments")
-
-        # Run standard GA experiments
-        print("Rastrigin Experiment")
-        rast_iter, rast_avr_fitness = run_ga_experiment(rastrigin, rast_dict, 100000, 5)
-        print("Schwefel Experiment")
-        schw_iter, schw_avr_fitness = run_ga_experiment(schwefel, schwe_dict, 100000, 5)
-        print("Griewangk Experiment")
-        grie_iter, grie_avr_fitness = run_ga_experiment(griewangk, grie_dict, 100000, 5)
-        print("Ackley Experiment")
-        ackl_iter, ackl_avr_fitness = run_ga_experiment(ackley, ackl_dict, 100000, 5)
-
-        # Write data to disk
-        output_data_path = "collected_data\\ga\\"
-
-        write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
-        write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
-        write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
-        write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
+        run_ga_experiments(15)
 
     # Run CCGA experiments
     if sys.argv[1] in ["ccga", "both"]:
-        print("CCGA Experiments")
-
-        output_data_path = "collected_data\\ccga\\"
-
-        # Run standard GA experiments
-        print("Ackley Experiment")
-        ackl_iter, ackl_avr_fitness = run_ccga_experiment(ackley, ackl_dict, 100000, 5)
-
-        write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
-
-        print("Rastrigin Experiment")
-        rast_iter, rast_avr_fitness = run_ccga_experiment(
-            rastrigin, rast_dict, 100000, 5
-        )
-
-        write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
-
-        print("Schwefel Experiment")
-        schw_iter, schw_avr_fitness = run_ccga_experiment(
-            schwefel, schwe_dict, 100000, 5
-        )
-
-        write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
-
-        print("Griewangk Experiment")
-        grie_iter, grie_avr_fitness = run_ccga_experiment(
-            griewangk, grie_dict, 100000, 5
-        )
-
-        write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
+        run_ccga_experiments(15)
