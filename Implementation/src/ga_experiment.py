@@ -219,12 +219,10 @@ class GAExperiment:
         """
 
         # Get random float between 0.0 and 1.0
-        pick = random.random() * roulette_wheel[-1]
+        rand = random.random() * roulette_wheel[-1]
 
         # Get the index of that value in the wheel
-        for ind_idx in range(0, len(roulette_wheel)):
-            if roulette_wheel[ind_idx] >= pick:
-                break
+        ind_idx = roulette_wheel.index(min([i for i in roulette_wheel if i >= rand]))
 
         # Create a new individual with the same genes to stop python assigning every
         # member of the population a link back to a single shared BitArray as their
