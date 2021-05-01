@@ -187,12 +187,13 @@ class CCGAExperiment:
             while self.evaluations_completed < self.evaluations:
 
                 self.generation += 1
-                print(
-                    "Generation ",
-                    self.generation,
-                    "\tEvaluations:",
-                    self.evaluations_completed,
-                )
+
+                # print(
+                #     "Generation:",
+                #     self.generation,
+                #     "\tEvaluation",
+                #     self.evaluations_completed,
+                # )
 
                 self.update_scaling_windows()
 
@@ -352,7 +353,7 @@ if __name__ == "__main__":
         assert pop3_best.fitness == rast_ccga.pops_best_fitness[3]
 
         # Test run
-        rast_ccga = CCGAExperiment(rastrigin, rast_dict, 100000)
+        rast_ccga = CCGAExperiment(ackley, ackl_dict, 10000)
         evaluation_data, fitness_data = rast_ccga.run_experiment()
 
         fig, ax = plt.subplots()
