@@ -60,7 +60,7 @@ class CCGAExperiment:
         """The fitness of the values stored in best_ind_idxs, used for computing
         global fitness each generation"""
 
-        self.scaling_windows = [[0] * 5] * self.pop_num
+        self.scaling_windows = [[0] * 5 for i in range(0, self.pop_num)]
         """Records of the worst fitness in each pop for the last 5 generations. 
         Used as the baseline for comparing all other fitnesses.
         """
@@ -124,25 +124,24 @@ class CCGAExperiment:
                 ind.fitness = self.fitness_func(random_param_set, self.param_num)
                 self.evaluations_completed += 1
 
-        # Update the best fitness found for every population set
-        self.update_best_inds()
+            # Update the best fitness found for every population set
+            self.update_best_inds(pop_num, pop)
 
-    def update_best_inds(self):
+    def update_best_inds(self, pop_num, pop):
         """Find the index of the best individual in each pop and save it and the fitness
         to global arrays for calculating the fitness of other pops.
         """
 
-        for pop_num, pop in enumerate(self.pops):
-            best_ind = min(pop, key=lambda ind: ind.fitness)
+        best_ind = min(pop, key=lambda ind: ind.fitness)
 
-            self.best_ind_idxs[pop_num] = pop.index(best_ind)
-            self.pops_best_fitness[pop_num] = best_ind.fitness
+        self.best_ind_idxs[pop_num] = pop.index(best_ind)
+        self.pops_best_fitness[pop_num] = best_ind.fitness
 
         # Add current best fitness to data capture
         self.evaluation_data.append(self.evaluations_completed)
         self.fitness_data.append(min(self.pops_best_fitness))
 
-    def update_fitnesses(self):
+    def update_fitnesses(self, pop_num):
         """Update the fitness values for every individual in each pop in self.pops
 
         A list of the best performing pops from last generation is assembled.
@@ -153,25 +152,31 @@ class CCGAExperiment:
         """
 
         # Assemble a "Greatest Hits" list of the best ind bit_arrays from each pop
-        best_inds_original = [
+        best_inds_copy = [
             self.pops[p_num][i_num].bit_arr.copy()
             for p_num, i_num in enumerate(self.best_ind_idxs)
         ]
 
-        # Iterate accross all individuals in each population
-        for pop_num, pop in enumerate(self.pops):
-
-            # Create a copy that can be overwritten
-            best_inds_copy = best_inds_original.copy()
-
-            # Test every ind in this pop against the best from the previous generation
-            for ind in pop:
-                best_inds_copy[pop_num] = ind.bit_arr
-                ind.fitness = self.fitness_func(best_inds_copy, self.param_num)
-                self.evaluations_completed += 1
+        # Test every ind in this pop against the best from the previous generation
+        for ind in self.pops[pop_num]:
+            best_inds_copy[pop_num] = ind.bit_arr
+            ind.fitness = self.fitness_func(best_inds_copy, self.param_num)
+            self.evaluations_completed += 1
 
         # Update the best fitness found for every population set
-        self.update_best_inds()
+        self.update_best_inds(pop_num, self.pops[pop_num])
+
+    def update_scaling_windows(self):
+        """Update all scaling windows with the worst fitness value from each population
+        from the last generation.
+        """
+
+        # Update each scaling window from previous fitness update
+        for pop_num, pop in enumerate(self.pops):
+            self.scaling_windows[pop_num].pop()
+            self.scaling_windows[pop_num].insert(
+                0, max(pop, key=lambda ind: ind.fitness).fitness
+            )
 
     def run_experiment(self):
         """Run the experiment up to a number of function evaluations given in
@@ -195,24 +200,12 @@ class CCGAExperiment:
                 for pop_num, pop in enumerate(self.pops):
                     scaling_factor = max(self.scaling_windows[pop_num])
                     self.pops[pop_num] = self.breed_new_population(pop, scaling_factor)
-
-                # Update fitness values
-                self.update_fitnesses()
+                    self.update_fitnesses(pop_num)
 
         except KeyboardInterrupt:
             print("Halting simulation...")
 
         return self.evaluation_data, self.fitness_data
-
-    def update_scaling_windows(self):
-        """Update all scaling windows with the worst fitness value from each population
-        from the last generation.
-        """
-
-        # Update each scaling window from previous fitness update
-        for window, pop in zip(self.scaling_windows, self.pops):
-            window.pop()
-            window.insert(0, max(pop, key=lambda ind: ind.fitness).fitness)
 
     def breed_new_population(self, pop, scaling_factor):
         """Perform proportional fitness selection to generate the next generation.
@@ -279,7 +272,17 @@ class CCGAExperiment:
         rand = random.random() * roulette_wheel[-1]
 
         # Get the index of that value in the wheel
-        ind_idx = roulette_wheel.index(min([i for i in roulette_wheel if i >= rand]))
+        try:
+            ind_idx = roulette_wheel.index(
+                min([i for i in roulette_wheel if i >= rand])
+            )
+        except ValueError as e:
+            print(roulette_wheel)
+            print("\n\n")
+            print(self.scaling_windows)
+            print("\n\n")
+            print(pop[0].fitness)
+            raise e
 
         # Create a new individual with the same genes to stop python assigning every
         # member of the population a link back to a single shared BitArray as their
@@ -310,11 +313,14 @@ class CCGAExperiment:
     def mutate(self, ind: Individual):
         """Mutate bits in ind with a chance of 1/len(ind)"""
 
+        # Precalculate mutation chance
+        mut_chance = 1 / len(ind.bit_arr)
+
         # For every bit position in ind
         for i in range(0, len(ind.bit_arr)):
 
             # If mutation chance met, invert bit at that position
-            if random.random() < (1 / len(ind.bit_arr)):
+            if random.random() < (mut_chance):
                 ind.bit_arr.invert(i)
 
         return ind
@@ -345,11 +351,8 @@ if __name__ == "__main__":
         assert pop3.index(pop3_best) == rast_ccga.best_ind_idxs[3]
         assert pop3_best.fitness == rast_ccga.pops_best_fitness[3]
 
-        # Test update fitness
-        rast_ccga.update_fitnesses()
-
         # Test run
-        rast_ccga = CCGAExperiment(ackley, ackl_dict, 100000)
+        rast_ccga = CCGAExperiment(rastrigin, rast_dict, 100000)
         evaluation_data, fitness_data = rast_ccga.run_experiment()
 
         fig, ax = plt.subplots()
