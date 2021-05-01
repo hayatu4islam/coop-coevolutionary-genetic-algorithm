@@ -4,6 +4,9 @@ This file implements a class which is used to complete all standard GA experimen
 The CCGA Experiment class is based on this.
 """
 
+import sys
+import cProfile
+
 from bitstring import BitArray
 import numpy as np
 import random
@@ -216,10 +219,12 @@ class GAExperiment:
         """
 
         # Get random float between 0.0 and 1.0
-        rand = random.random() * roulette_wheel[-1]
+        pick = random.random() * roulette_wheel[-1]
 
         # Get the index of that value in the wheel
-        ind_idx = roulette_wheel.index(min([i for i in roulette_wheel if i >= rand]))
+        for ind_idx in range(0, len(roulette_wheel)):
+            if roulette_wheel[ind_idx] >= pick:
+                break
 
         # Create a new individual with the same genes to stop python assigning every
         # member of the population a link back to a single shared BitArray as their
@@ -250,11 +255,14 @@ class GAExperiment:
     def mutate(self, ind: Individual):
         """Mutate bits in ind with a chance of 1/len(ind)"""
 
+        # Get mutation chance from array length
+        mut_chance = 1 / len(ind.bit_arr)
+
         # For every bit position in ind
         for i in range(0, len(ind.bit_arr)):
 
             # If mutation chance met, invert bit at that position
-            if random.random() < (1 / len(ind.bit_arr)):
+            if random.random() < (mut_chance):
                 ind.bit_arr.invert(i)
 
         return ind
@@ -265,7 +273,8 @@ from functions import (
     rast_dict,
 )
 
-if __name__ == "__main__":
+
+def main():
     # Run Some tests
     try:
         # Generate new experiment, check pop and fitness are generated right
@@ -300,7 +309,7 @@ if __name__ == "__main__":
         print(rast_ga_exp_big.mutate(rast_ga_exp_big.pop[0]).bit_arr)
 
         # Run Rastigin test
-        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 1000, 4)
+        rast_ga_exp = GAExperiment(rastrigin, rast_dict, 10000)
 
         rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
 
@@ -319,3 +328,23 @@ if __name__ == "__main__":
 
     else:
         print("All Assertion Tests Passed!")
+
+
+def profile():
+
+    # Define experiment
+    rast_ga_exp = GAExperiment(rastrigin, rast_dict, 2000)
+
+    # Profile experiment run
+    print("Begin Profiling...")
+    cProfile.runctx("rast_ga_exp.run_experiment()", globals(), locals())
+
+
+if __name__ == "__main__":
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "profile":
+            profile()
+
+    else:
+        main()
