@@ -48,16 +48,16 @@ class CCGAExperiment:
         """The number of evaluations completed so far"""
 
         self.generation = 0
-        """The current generation of population"""
+        """The current generation"""
 
         self.pops = [self.get_starting_pop() for i in range(0, self.pop_num)]
         """A set of populations, each defining one function parameter"""
 
         self.best_ind_idxs = [0] * self.param_num
-        """The indexes the best individuals in each population"""
+        """The indexes of the best individuals in each population"""
 
         self.pops_best_fitness = [10e50] * self.param_num
-        """The fitness of the values stored in best_ind_idxs, used for computing
+        """The fitness of the Individuals stored in best_ind_idxs, used for computing
         global fitness each generation"""
 
         self.scaling_windows = [[0] * 5 for i in range(0, self.pop_num)]
@@ -72,9 +72,6 @@ class CCGAExperiment:
         self.evaluation_data = []
         """An array containing the function evaluation number that each corresponding
         element in fitness_data was collected."""
-
-        # Update the fitnesses of the pops to prepare for the start of the algorithm
-        self.set_starting_fitness()
 
     def get_starting_pop(self):
         """Generate a starter population of random individuals"""
@@ -182,6 +179,9 @@ class CCGAExperiment:
         """Run the experiment up to a number of function evaluations given in
         evaluations.
         """
+
+        # Update the fitnesses of the pops to prepare for the start of the algorithm
+        self.set_starting_fitness()
 
         try:
             while self.evaluations_completed < self.evaluations:
