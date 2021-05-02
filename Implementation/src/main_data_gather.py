@@ -27,19 +27,24 @@ from ga_experiment import GAExperiment
 from ccga_experiment import CCGAExperiment
 
 
-def run_ga_experiment(fitness_func, func_dict, iterations, num_experiments):
+def run_ga_experiment(
+    fitness_func, func_dict, iterations, num_experiments, extension=0
+):
     """Runs all standard ga experiments and saves results to disk"""
 
-    # Run Rastragin Experiments
+    GAs = [
+        GAExperiment(fitness_func, func_dict, iterations, _extension=extension)
+        for i in range(0, num_experiments)
+    ]
+
+    print("Finished Generating GAs")
 
     iteration_data = []
     sum_fitness_data = []
 
     sum_fitness_data = np.array([0.0] * int(iterations / 100))
 
-    for i in range(0, num_experiments):
-        GA = GAExperiment(fitness_func, func_dict, iterations)
-        print("GAs generated")
+    for i, GA in enumerate(GAs):
         iteration_data, fitness_data = GA.run_experiment()
         sum_fitness_data += np.array(fitness_data)
 
@@ -58,7 +63,6 @@ def run_ccga_experiment(
     if param_num == -1:
         param_num = func_dict["n"]
 
-    # Run Rastragin Experiments
     GAs = [
         CCGAExperiment(fitness_func, func_dict, iterations, param_num)
         for i in range(0, num_experiments)
@@ -169,12 +173,50 @@ def run_ccga_experiments(experiment_num):
     write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
 
 
+def run_exga_experiments(experiment_num):
+
+    print("Extended GA Experiments")
+
+    # Run standard GA experiments
+    print("Rastrigin Experiment")
+    rast_iter, rast_avr_fitness = run_ga_experiment(
+        rastrigin, rast_dict, 100000, experiment_num, extension=1
+    )
+
+    print("Schwefel Experiment")
+    schw_iter, schw_avr_fitness = run_ga_experiment(
+        schwefel, schwe_dict, 100000, experiment_num, extension=1
+    )
+
+    print("Griewangk Experiment")
+    grie_iter, grie_avr_fitness = run_ga_experiment(
+        griewangk, grie_dict, 100000, experiment_num, extension=1
+    )
+
+    print("Ackley Experiment")
+    ackl_iter, ackl_avr_fitness = run_ga_experiment(
+        ackley, ackl_dict, 100000, experiment_num, extension=1
+    )
+
+    # Write data to disk
+    output_data_path = "collected_data\\exga\\"
+
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "exga_rast.txt")
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "exga_schw.txt")
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "exga_grie.txt")
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "exga_ackl.txt")
+
+
 if __name__ == "__main__":
 
     # Run GA experiments if requested
-    if sys.argv[1] in ["ga", "both"]:
+    if sys.argv[1] in ["ga", "all"]:
         run_ga_experiments(15)
 
     # Run CCGA experiments
-    if sys.argv[1] in ["ccga", "both"]:
+    if sys.argv[1] in ["ccga", "all"]:
         run_ccga_experiments(15)
+
+    # Run EXGA experiments if requested
+    if sys.argv[1] in ["exga", "all"]:
+        run_exga_experiments(15)

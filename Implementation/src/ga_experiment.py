@@ -17,7 +17,12 @@ from individual import Individual
 
 class GAExperiment:
     def __init__(
-        self, _fitness_func, _func_dict, _evaluations=100000, _func_param_num=-1
+        self,
+        _fitness_func,
+        _func_dict,
+        _evaluations=100000,
+        _func_param_num=-1,
+        _extension=0,
     ):
 
         self.fitness_func = _fitness_func
@@ -68,6 +73,21 @@ class GAExperiment:
         self.evaluation_data = []
         """An array containing the function evaluation number that each corresponding
         element in fitness_data was collected."""
+
+        #### Extension ####
+
+        self.crossover = None
+        """A placeholder for the function which performs crossover.
+        It is selected based on the value of the _extension argument to be either
+        standart two_point_crossover or the extension function n_chunk_crossover.
+        """
+
+        if _extension == 0:
+            self.crossover = self.two_point_crossover
+        else:
+            self.crossover = self.n_chunk_crossover
+
+        #### End Extension ####
 
         # Update the fitnesses of the pops to prepare for the start of the algorithm
         self.update_fitnesses()
@@ -180,7 +200,7 @@ class GAExperiment:
             if random.random() < 0.6:
                 ind1 = self.select_new_ind(roulette_wheel)
                 ind2 = self.select_new_ind(roulette_wheel)
-                new_ind = self.two_point_crossover(ind1, ind2)
+                new_ind = self.crossover(ind1, ind2)
 
             else:
                 new_ind = self.select_new_ind(roulette_wheel)
@@ -265,6 +285,44 @@ class GAExperiment:
 
         return ind
 
+    ####EXTENSION####
+
+    def n_chunk_crossover(self, ind1: Individual, ind2: Individual) -> Individual:
+        """Create a new individual by taking parameter chunks from each parent at
+        random.
+
+        A combination of n-point crossover and uniform crossover.
+        It has property of randomly sampling each parent to make the child that
+        uniform crossover uses but, it respects the boundaries of the parameters.
+        """
+
+        # First create a blank bitarray to store the new child in.
+        new_bit_arr = BitArray("uint:{}=0".format(self.pop_width))
+
+        # Get the bitarrays of the parents
+        ind1_bit_arr = ind1.bit_arr
+        ind2_bit_arr = ind2.bit_arr
+
+        # Generate an N value array of random numbers to decide which
+        # chunks come from which parent
+        chunk_rands = np.random.rand(self.param_num).tolist()
+
+        # Assign each chunk in the new bitarray with the equivalent chunk
+        # from a randomly selected parent.
+        for i, ind_idx in enumerate(range(0, self.param_num * 16, 16)):
+
+            # Define the chunk start and ends
+            start = ind_idx
+            end = ind_idx + 16
+
+            if chunk_rands[i] < 0.5:
+                new_bit_arr[start:end] = ind1_bit_arr[start:end]
+
+            else:
+                new_bit_arr[start:end] = ind2_bit_arr[start:end]
+
+        return Individual(new_bit_arr)
+
 
 from functions import (
     rastrigin,
@@ -306,19 +364,42 @@ def main():
         print(rast_ga_exp_big.pop[0].bit_arr)
         print(rast_ga_exp_big.mutate(rast_ga_exp_big.pop[0]).bit_arr)
 
+        # Test extension two point crossover
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10, 6)
+        ind1 = rast_ga_ext.pop[0]
+        ind2 = rast_ga_ext.pop[1]
+        child = rast_ga_ext.n_chunk_crossover(ind1, ind2)
+
+        print("N Chunk Cross Over Test")
+        print(ind1.bit_arr.hex)
+        print(ind2.bit_arr.hex)
+        print(child.bit_arr.hex)
+
         # Run Rastigin test
+        print("Standard Rastrigin Test")
+
         rast_ga_exp = GAExperiment(rastrigin, rast_dict, 10000)
+        test_pop = rast_ga_exp.pop.copy()
 
         rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
 
-        fig, ax = plt.subplots()
-        ax.plot(rast_evalus, rast_fitness)
-        plt.show()
+        fig, standard_ax = plt.subplots()
+        standard_ax.plot(rast_evalus, rast_fitness)
 
         pop = rast_ga_exp.pop
 
-        for evaluation, fitness in zip(rast_evalus, rast_fitness):
-            print(evaluation, "\t", fitness)
+        # Run Extension test
+        print("Extension Rastrigin Test")
+
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10000, _extension=1)
+        rast_ga_ext.pop = test_pop
+
+        ext_evalus, ext_fitness = rast_ga_ext.run_experiment()
+
+        fig, extension_ax = plt.subplots()
+        standard_ax.plot(ext_evalus, ext_fitness)
+
+        plt.show()
 
     except AssertionError as e:
         print("Assertion Failed!")
