@@ -109,35 +109,34 @@ def write_to_file(iter_data, avr_fitness_data, filepath):
 def run_ga_experiments(experiment_num):
 
     print("GA Experiments")
+    output_data_path = "collected_data\\ga\\"
 
     # Run standard GA experiments
     print("Rastrigin Experiment")
     rast_iter, rast_avr_fitness = run_ga_experiment(
         rastrigin, rast_dict, 100000, experiment_num
     )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ga_experiment(
         schwefel, schwe_dict, 100000, experiment_num
     )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ga_experiment(
         griewangk, grie_dict, 100000, experiment_num
     )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
 
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ga_experiment(
         ackley, ackl_dict, 100000, experiment_num
     )
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
 
     # Write data to disk
-    output_data_path = "collected_data\\ga\\"
-
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
-    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
 
 
 def run_ccga_experiments(experiment_num):
@@ -150,26 +149,25 @@ def run_ccga_experiments(experiment_num):
     rast_iter, rast_avr_fitness = run_ccga_experiment(
         rastrigin, rast_dict, 100000, experiment_num
     )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ccga_experiment(
         schwefel, schwe_dict, 100000, experiment_num
     )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ccga_experiment(
         griewangk, grie_dict, 100000, experiment_num
     )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
 
     # Run standard GA experiments
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ccga_experiment(
         ackley, ackl_dict, 100000, experiment_num
     )
-
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
     write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
 
 
@@ -177,33 +175,31 @@ def run_exga_experiments(experiment_num):
 
     print("Extended GA Experiments")
 
+    output_data_path = "collected_data\\exga\\"
+
     # Run standard GA experiments
     print("Rastrigin Experiment")
     rast_iter, rast_avr_fitness = run_ga_experiment(
         rastrigin, rast_dict, 100000, experiment_num, extension=1
     )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "exga_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ga_experiment(
         schwefel, schwe_dict, 100000, experiment_num, extension=1
     )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "exga_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ga_experiment(
         griewangk, grie_dict, 100000, experiment_num, extension=1
     )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "exga_grie.txt")
 
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ga_experiment(
         ackley, ackl_dict, 100000, experiment_num, extension=1
     )
-
-    # Write data to disk
-    output_data_path = "collected_data\\exga\\"
-
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "exga_rast.txt")
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "exga_schw.txt")
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "exga_grie.txt")
     write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "exga_ackl.txt")
 
 
