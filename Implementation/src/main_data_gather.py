@@ -10,7 +10,6 @@ in MATLAB.
 import numpy as np
 import os
 import sys
-import threading
 
 from functions import (
     rastrigin,
