@@ -205,14 +205,19 @@ def run_exga_experiments(experiment_num):
 
 if __name__ == "__main__":
 
+    if len(sys.argv) > 1:
+        experiment_num = int(sys.argv[2])
+    else:
+        experiment_num = 15
+
     # Run GA experiments if requested
     if sys.argv[1] in ["ga", "all"]:
-        run_ga_experiments(15)
+        run_ga_experiments(experiment_num)
 
     # Run CCGA experiments
     if sys.argv[1] in ["ccga", "all"]:
-        run_ccga_experiments(15)
+        run_ccga_experiments(experiment_num)
 
     # Run EXGA experiments if requested
     if sys.argv[1] in ["exga", "all"]:
-        run_exga_experiments(15)
+        run_exga_experiments(experiment_num)
