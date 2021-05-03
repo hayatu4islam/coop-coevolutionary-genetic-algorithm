@@ -14,14 +14,21 @@ The fitness of each individual is calculated by by splitting the bit-string into
 In the CCGA, each parameter is represented by its own population of bit-strings.
 Each population is evaluated in a round-robin fashion.
 The fitness of each individual is calculated by combining it with the best individuals from each of the other populations and running this set through the function.
+An initial fitness value is assigned before the first generation by evaluating each individual with a random individual from each population.
 In both algorithms, the closer the function output is to zero, the fitter the individual.
 
+A scaling window is used to translate this smaller-is-better fitness regime into a fitness proportionate selection scheme.
+When calculating the selection probability of an individual its fitness is subtracted from the fitness of the worst individual from the past 5 generations.
+This value is used when calculating the size of an individuals 'slice' on the roulette wheel.
+This also allows small variations in the population to standout relative to the rest of the population.
+
 Table \ref{tab:parameter-table}, reproduced from the original paper, contains the algorithm characteristics used in the experiments.
+
 
 \begin{table} [h]
     \begin{tabular}{|l|l|}
         \hline
-        \textbf{Parameter}      & \textbf{Value}                            \\
+        \textbf{Characteristic}      & \textbf{Value}                       \\
         \hline
         Representation          & Binary (16 bits per function parameter)   \\
         Selection               & Fitness Proportionate                     \\
@@ -31,6 +38,7 @@ Table \ref{tab:parameter-table}, reproduced from the original paper, contains th
         Mutation Probability    & 1/chromlength                             \\
         Crossover Probability   & 0.6                                       \\
         Population Size         & 100                                       \\
+        Simulation Length       & 100000 function evaluations               \\
         \hline
 
     \end{tabular}
