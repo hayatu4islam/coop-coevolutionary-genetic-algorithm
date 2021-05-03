@@ -215,7 +215,7 @@ if __name__ == "__main__":
     if sys.argv[1] in ["ga", "all"]:
         run_ga_experiments(experiment_num)
 
-    # Run CCGA experiments
+    # Run CCGA experiments if requested
     if sys.argv[1] in ["ccga", "all"]:
         run_ccga_experiments(experiment_num)
 
