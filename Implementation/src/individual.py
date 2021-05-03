@@ -1,11 +1,12 @@
-"""Individual Class
+"""
+Individual
+==========
 
 Simple class holding just a BitArray and the corresponding fitness for that
 array. If Python had structs I'd use one of those.
 """
 
 from bitstring import BitArray
-
 
 class Individual:
     def __init__(self, bit_arr: BitArray):

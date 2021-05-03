@@ -1,7 +1,9 @@
-"""Main Data Gather
+"""
+Main Data Gather
+================
 
 The project's main file. All data generated for this project is done so in here.
-No plots are produced however. The data is gathered and saved to disk to be plotted
+No plots are produced. The data is gathered and saved to disk to be plotted
 in MATLAB.
 """
 

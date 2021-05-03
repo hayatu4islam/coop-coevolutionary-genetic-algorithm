@@ -1,6 +1,9 @@
-""" GA Experiment
+""" 
+GA Experiment
+=============
 
 This file implements a class which is used to complete all standard GA experiments.
+This includes the extension.
 The CCGA Experiment class is based on this.
 """
 

@@ -1,7 +1,9 @@
-""" GA Experiment
+""" 
+CCGA Experiment
+=============
 
-This file implements a class which is used to complete all standard GA experiments.
-The CCGA Experiment class is based on this.
+This file implements a class that is used to perform all CCGA experiments.
+It is based off the ga_experiments file.
 """
 
 from bitstring import BitArray
