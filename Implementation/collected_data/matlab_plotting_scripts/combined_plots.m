@@ -19,6 +19,8 @@ legend("GA", "CCGA")
 subtitle("Rastrigin Function")
 ylabel("Best Individual")
 xlabel("Function Evaluations")
+xlim([0 100000])
+ylim([0 40])
 
 % Schwefel Function
 subplot(2, 2, 2)
@@ -29,6 +31,8 @@ legend("GA", "CCGA")
 subtitle("Schwefel Function")
 ylabel("Best Individual")
 xlabel("Function Evaluations")
+xlim([0 100000])
+ylim([0 400])
 
 % Griewangk Function
 subplot(2, 2, 3)
@@ -39,6 +43,8 @@ legend("GA", "CCGA")
 subtitle("Griewangk Function")
 ylabel("Best Individual")
 xlabel("Function Evaluations")
+xlim([0 100000])
+ylim([0 8])
 
 % Ackley Function
 subplot(2, 2, 4)
@@ -49,3 +55,5 @@ legend("GA", "CCGA")
 subtitle("Ackley Function")
 ylabel("Best Individual")
 xlabel("Function Evaluations")
+xlim([0 100000])
+ylim([0 16])
