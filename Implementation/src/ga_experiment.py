@@ -87,8 +87,14 @@ class GAExperiment:
 
         if _extension == 0:
             self.crossover = self.two_point_crossover
-        else:
+        elif _extension == 1:
             self.crossover = self.n_chunk_crossover
+
+        self.extension = _extension
+        """Determins which extension to use.
+        If 0: normal GA.
+        If 1: n_chunk crossover
+        If 2: n individual crossover""" 
 
         #### End Extension ####
 
@@ -201,9 +207,17 @@ class GAExperiment:
 
             # Crossover chance of 0.6
             if random.random() < 0.6:
-                ind1 = self.select_new_ind(roulette_wheel)
-                ind2 = self.select_new_ind(roulette_wheel)
-                new_ind = self.crossover(ind1, ind2)
+
+                # Perform normal 2 parent crossover
+                if self.extension in [0,1]:
+                    ind1 = self.select_new_ind(roulette_wheel)
+                    ind2 = self.select_new_ind(roulette_wheel)
+                    new_ind = self.crossover(ind1, ind2)
+                
+                # Perform n parent crossover
+                else:
+                    parent_list = [self.select_new_ind(roulette_wheel) for i in range(0, self.param_num)]
+                    new_ind = self.n_ind_crossover(parent_list)
 
             else:
                 new_ind = self.select_new_ind(roulette_wheel)
@@ -326,6 +340,35 @@ class GAExperiment:
 
         return Individual(new_bit_arr)
 
+    def n_ind_crossover(self, ind_list: list[Individual]) -> Individual:
+        """Create a new individual by taking parameter chunks from a number of
+        parents equal to the number of parameters in being evaluated.
+
+        The is an extension of the n_chunk_crossover designed above. 
+        It is designed to mimic the use of multiple populations as seen in 
+        the CCGA as closely as possible.
+        """
+
+        # First create a blank bitarray to store the new child in.
+        new_bit_arr = BitArray("uint:{}=0".format(self.pop_width))
+
+        # Get the bitarrays of the parents
+        bit_arrs = [ind.bit_arr for ind in ind_list]
+
+        # Assign each chunk in the new bitarray with the equivalent chunk
+        # from a randomly selected parent.
+        for i, ind_idx in enumerate(range(0, self.param_num * 16, 16)):
+
+            # Define the chunk start and ends
+            start = ind_idx
+            end = ind_idx + 16
+
+            # Select a parent at random and take their parameter
+            rand_ind_bit_arr = random.choice(bit_arrs)
+            new_bit_arr[start:end] = rand_ind_bit_arr[start:end]
+
+        return Individual(new_bit_arr)
+
 
 from functions import (
     rastrigin,
@@ -378,6 +421,14 @@ def main():
         print(ind2.bit_arr.hex)
         print(child.bit_arr.hex)
 
+        # Test n_ind_crossover
+        print("N Ind Crossover test")
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10, 4)
+        pops = rast_ga_ext.pop[0:3]
+
+        [print(pop.bit_arr.hex) for pop in pops]
+        print(rast_ga_ext.n_ind_crossover(pops).bit_arr.hex)
+
         # Run Rastigin test
         print("Standard Rastrigin Test")
 
@@ -391,16 +442,22 @@ def main():
 
         pop = rast_ga_exp.pop
 
-        # Run Extension test
-        print("Extension Rastrigin Test")
+        # Run n_chunk_crossover test
+        print("n_chunk Rastrigin Test")
 
         rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10000, _extension=1)
-        rast_ga_ext.pop = test_pop
 
         ext_evalus, ext_fitness = rast_ga_ext.run_experiment()
 
-        fig, extension_ax = plt.subplots()
         standard_ax.plot(ext_evalus, ext_fitness)
+
+        # Run n_ind_crossover test
+        print("n_ind Rastrigin Test")
+
+        rast_ga_ext_n_ind = GAExperiment(rastrigin, rast_dict, 10000, _extension=2)
+        n_ind_evalus, n_ind_fitness = rast_ga_ext_n_ind.run_experiment()
+
+        standard_ax.plot(n_ind_evalus, n_ind_fitness)
 
         plt.show()
 

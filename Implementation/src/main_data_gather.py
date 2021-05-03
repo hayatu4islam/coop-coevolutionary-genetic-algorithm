@@ -172,41 +172,43 @@ def run_ccga_experiments(experiment_num):
     write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
 
 
-def run_exga_experiments(experiment_num):
+def run_exga_experiments(experiment_num, extension):
 
-    print("Extended GA Experiments")
+    print("EXGA_{} Experiments".format(extension))
 
-    output_data_path = "collected_data\\exga\\"
+    expname = "exga_" + str(extension)
+
+    output_data_path = "collected_data\\{}\\".format(expname)
 
     # Run standard GA experiments
     print("Rastrigin Experiment")
     rast_iter, rast_avr_fitness = run_ga_experiment(
         rastrigin, rast_dict, 100000, experiment_num, extension=1
     )
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "exga_rast.txt")
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + expname + "_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ga_experiment(
         schwefel, schwe_dict, 100000, experiment_num, extension=1
     )
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "exga_schw.txt")
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + expname + "_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ga_experiment(
         griewangk, grie_dict, 100000, experiment_num, extension=1
     )
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "exga_grie.txt")
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + expname + "_grie.txt")
 
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ga_experiment(
         ackley, ackl_dict, 100000, experiment_num, extension=1
     )
-    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "exga_ackl.txt")
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + expname + "_ackl.txt")
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
         experiment_num = int(sys.argv[2])
     else:
         experiment_num = 15
@@ -221,4 +223,11 @@ if __name__ == "__main__":
 
     # Run EXGA experiments if requested
     if sys.argv[1] in ["exga", "all"]:
-        run_exga_experiments(experiment_num)
+        
+        # Set extension number from cmd, default to 1
+        extension = 1
+        
+        if len(sys.argv) > 3:
+            extension = int(sys.argv[3])
+
+        run_exga_experiments(experiment_num, extension)
