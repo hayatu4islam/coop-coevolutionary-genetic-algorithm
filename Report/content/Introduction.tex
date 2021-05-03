@@ -1,1 +1,39 @@
 \section{Introduction} \label{sec:introduction}
+
+The third paper, \textit{A Cooperative Coevolutionary Approach to Function Optimisation}\cite{original-paper} was chosen for this assignment.
+The paper presents a framework for a Cooperative Coevolutionary Genetic Algorithm (CCGA) and compares its performance with a standard Genetic Algorithm (GA) in function optimisation problem.
+
+The functions were chosen for being \textit{``highly multi-modal''}, presenting a difficult challenge for a hill-climber.
+These functions are referred to as the Rastrigin, Schwefel, Griewangk, and Ackley functions\cite{functions-1,functions-2,functions-3}.
+Each of these functions has a global minimum of zero when the set of parameters fed into it are bounded by set values.
+The optimisation task presented in the paper is to evolve the set of parameters that give an output of zero.
+Each algorithm's performance is tested on each function individually.
+
+In the standard GA, the individuals being evolved are bit-strings representing every parameter.
+The fitness of each individual is calculated by by splitting the bit-string into the parameters and running it through the function.
+In the CCGA, each parameter is represented by its own population of bit-strings.
+Each population is evaluated in a round-robin fashion.
+The fitness of each individual is calculated by combining it with the best individuals from each of the other populations and running this set through the function.
+In both algorithms, the closer the function output is to zero, the fitter the individual.
+
+Table \ref{tab:parameter-table}, reproduced from the original paper, contains the algorithm characteristics used in the experiments.
+
+\begin{table} [h]
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Parameter}      & \textbf{Value}                            \\
+        \hline
+        Representation          & Binary (16 bits per function parameter)   \\
+        Selection               & Fitness Proportionate                     \\
+        Fitness Scaling         & Scaling Window Technique (width 5)        \\
+        Elitist Strategy        & Single copy of best individual preserved  \\
+        Genetic Operators       & Two-point crossover and bit-flip mutation \\
+        Mutation Probability    & 1/chromlength                             \\
+        Crossover Probability   & 0.6                                       \\
+        Population Size         & 100                                       \\
+        \hline
+
+    \end{tabular}
+    \caption{A table showing the characteristics of the algorithms used to perform the experiments. Reproduced from \cite{original-paper}}
+    \label{tab:parameter-table}
+\end{table}
