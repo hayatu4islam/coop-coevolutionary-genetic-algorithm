@@ -57,3 +57,5 @@ ylabel("Best Individual")
 xlabel("Function Evaluations")
 xlim([0 100000])
 ylim([0 16])
+
+saveas(combined_plot, "../../../Report/img/combined_plot.png")

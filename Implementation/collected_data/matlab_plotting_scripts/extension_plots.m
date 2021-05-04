@@ -19,7 +19,7 @@ load ..\exga_2\exga_2_ackl.txt
 load ..\exga_2\exga_2_grie.txt
 
 
-combined_plot = figure();
+extension_plot = figure();
 
 % Rastrigin Function
 subplot(2, 2, 1)
@@ -76,3 +76,5 @@ ylabel("Best Individual")
 xlabel("Function Evaluations")
 xlim([0 100000])
 ylim([0 16])
+
+saveas(extension_plot, "../../../Report/img/extension_plot.png")
