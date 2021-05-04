@@ -340,7 +340,7 @@ class GAExperiment:
 
         return Individual(new_bit_arr)
 
-    def n_ind_crossover(self, ind_list: list[Individual]) -> Individual:
+    def n_ind_crossover(self, ind_list) -> Individual:
         """Create a new individual by taking parameter chunks from a number of
         parents equal to the number of parameters in being evaluated.
 
