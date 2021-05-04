@@ -1,1 +1,29 @@
 \section{Extension} \label{sec:extension}
+
+When reading the original paper and surrounding literature it was noted that while of the characteristics given in Table \ref{tab:parameter-table} impact each algorithm equally, there is one area where it seems the CCGA has an unfair advantage.
+By performing a two point crossover on each individual in the CCGA it is effectively performing an N point crossover on the problem as a whole. 
+Whilst the number of crossovers does not change between the two algorithms as the number of fitness evaluations are fixed, it still enables evolution to occur at a more granular level in the CCGA when combined with the fitness evaluation alongside the best individuals in other populations.
+
+It is thought that these properties have a small but measurable impact on the CCGA's peprformance, but the majority comes from how fitness data is measured and stored.
+
+
+The hypothesis that is presented in this extension is as follows:
+
+\emph{The performance increase of the CCGA over the standard GA comes from the ability to effectively measure the fitness of individual genes rather than entire genomes, not the more granular crossover scheme a CCGA enables.} 
+
+To test this, two new crossover functions would be written:
+\begin{enumerate}
+    \item \textbf{N Point/Chunk Crossover} - In this scheme, two parents are selected as is the case for two point crossover. However, rather than combining two contiguous halves from each parent to produce the offspring, each 16-bit chunk is taken from a randomly selected parent. 
+    This can be thought of like N chunk uniform crossover.
+    This accounts for the situation where both parents have good and bad genes distributed throughout rather than just in one half.
+
+    \item \textbf{N Individual Crossover} -  This is an extension of the scheme above.
+    Here each individual has a number of parents equal to the number of function parameters.
+    Like before, each 16-bit chunk is taken from a randomly selected parent.
+    This means that each function evaluation is able to sample a wider range of the population.
+    This crossover method is combined with standard two point crossover to allow genes to be split occasionally.
+\end{enumerate}
+
+Both these schemes aim to equalise the playing field between the GA and the CCGA. 
+They constitute reasonable drop-in improvements to a standard GA that aim to mimic the granularity of a CCGA without adding the infrastructure needed for multiple populations.
+The two schemes shall be refereed to as the EXGA\_1 and the EXGA\_2.
