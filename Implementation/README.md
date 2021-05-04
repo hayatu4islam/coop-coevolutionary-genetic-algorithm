@@ -8,6 +8,7 @@ All Python files developed for this project can be found here.
 The results produced by the Python scripts are saved here.
 Each experiment has its own subdirectory with txt files containing the results.
 The subdirectory matlab_plotting_scripts contain the MATLAB scripts used to plot the results.
+The subdirectory previous_results contains backups of previous runs of the software.
 
 ## requirements.txt
 The Python libraries needed to run this project.
