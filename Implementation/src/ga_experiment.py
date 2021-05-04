@@ -214,10 +214,19 @@ class GAExperiment:
                     ind2 = self.select_new_ind(roulette_wheel)
                     new_ind = self.crossover(ind1, ind2)
                 
-                # Perform n parent crossover
+                # Perform either an N parent crossover or a standard two point crossover
+                # This allows an individual to be made from genes of many parents 
+                # And for genes to be split with two point crossover.
                 else:
-                    parent_list = [self.select_new_ind(roulette_wheel) for i in range(0, self.param_num)]
-                    new_ind = self.n_ind_crossover(parent_list)
+                    if random.random() < 0.8: 
+                        parent_list = [self.select_new_ind(roulette_wheel) for i in range(0, self.param_num)]
+                        new_ind = self.n_ind_crossover(parent_list)
+
+                    else:
+                        ind1 = self.select_new_ind(roulette_wheel)
+                        ind2 = self.select_new_ind(roulette_wheel)
+                        new_ind = self.two_point_crossover(ind1, ind2)
+                
 
             else:
                 new_ind = self.select_new_ind(roulette_wheel)
@@ -438,6 +447,7 @@ def main():
 
         fig, standard_ax = plt.subplots()
         standard_ax.plot(rast_evalus, rast_fitness)
+        plt.legend("GA")      
 
         pop = rast_ga_exp.pop
 
@@ -449,6 +459,7 @@ def main():
         ext_evalus, ext_fitness = rast_ga_ext.run_experiment()
 
         standard_ax.plot(ext_evalus, ext_fitness)
+        plt.legend("EXGA_1")      
 
         # Run n_ind_crossover test
         print("n_ind Rastrigin Test")
@@ -457,7 +468,8 @@ def main():
         n_ind_evalus, n_ind_fitness = rast_ga_ext_n_ind.run_experiment()
 
         standard_ax.plot(n_ind_evalus, n_ind_fitness)
-
+        plt.legend(["GA", "EXGA_1", "EXGA_2"])        
+        
         plt.show()
 
     except AssertionError as e:
