@@ -12,13 +12,13 @@ Also included are functions to convert a set of BitArrays to function parameters
 The original paper did not specify the conversion process used so the range of $[0, 2^{16} - 1]$ that the BitArray can represent is mapped to the lower and upper limits of the functions (e.g. $[-5.12, 5.12]$ for the Rastrigin function).
 
 The algorithms are implemented in the classes \texttt{GAExperiment} and \texttt{CCGAExperiment} (see Appendices \ref{lst:ga_experiment}, \ref{lst:ccga_experiment}). 
-These classes implement generic versions of their algorithm so must be provided with the fitness function, the corresponding Python dict, and the number of parameters under test upon instantiation.
+These classes implement generic versions of their algorithm and must be provided with the fitness function, the corresponding Python dict, and the number of parameters under test upon instantiation.
 The experiment can then be run using the \texttt{run\_experiment()} method.
-The \texttt{CCGAExperiment} class shares the same overall structure as the \texttt{GAExperiment} class but has been upgraded with the infrastructure to store, evolve, and evaluate multiple populations.
+The \texttt{CCGAExperiment} class shares the same overall structure as the \texttt{GAExperiment} class but has been upgraded with the infrastructure needed to store, evolve, and evaluate multiple populations.
 
 The experiments are performed in the file \texttt{main\_data\_gather.py} (see Appendix \ref{lst:main_data_gather}).
 This acts as the project's main file.
-The user specifies which algorithms should be tested and the number of runs the results should be averaged over.
+The user specifies which algorithms should be tested and the number of runs the results should be averaged over with command line arguments.
 The results are saved to txt files for plotting.
 The computing resources available to this project were limited due to working from home so results of each experiment were averaged over 15 runs rather than the 50 in the original paper.
 

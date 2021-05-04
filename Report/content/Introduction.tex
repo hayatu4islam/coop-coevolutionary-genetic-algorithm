@@ -1,16 +1,16 @@
 \section{Introduction} \label{sec:introduction}
 
-The third paper, \textit{A Cooperative Coevolutionary Approach to Function Optimisation}\cite{original-paper} was chosen for this assignment.
-The paper presents a framework for a Cooperative Coevolutionary Genetic Algorithm (CCGA) and compares its performance with a standard Genetic Algorithm (GA) in function optimisation problem.
+In this assignment, the paper titled: \textit{A Cooperative Coevolutionary Approach to Function Optimisation}\cite{original-paper} was chosen for reimplementation.
+The paper presents a framework for a Cooperative Coevolutionary Genetic Algorithm (CCGA) and compares its performance with a standard Genetic Algorithm (GA) as a function optimiser.
 
-The functions were chosen for being \textit{``highly multi-modal''}, presenting a difficult challenge for a hill-climber.
+The functions to be optimised were chosen for being \textit{``highly multi-modal''}.
 These functions are referred to as the Rastrigin, Schwefel, Griewangk, and Ackley functions\cite{functions-1,functions-2,functions-3}.
-Each of these functions has a global minimum of zero when the set of parameters fed into it are bounded by set values.
-The optimisation task presented in the paper is to evolve the set of parameters that give an output of zero.
-Each algorithm's performance is tested on each function individually.
+Each of these functions has a global minimum of zero provided that the set of parameters fed into it are bounded by set values.
+The optimisation task presented in the paper is to evolve the set of function parameters that give an output of zero.
+The performance of each algorithm is tested on each function individually.
 
 In the standard GA, the individuals being evolved are bit-strings representing every parameter.
-The fitness of each individual is calculated by by splitting the bit-string into the parameters and running it through the function.
+The fitness of each individual is calculated by by splitting the bit-string into the parameters and running them through the function.
 In the CCGA, each parameter is represented by its own population of bit-strings.
 Each population is evaluated in a round-robin fashion.
 The fitness of each individual is calculated by combining it with the best individuals from each of the other populations and running this set through the function.
@@ -19,7 +19,7 @@ In both algorithms, the closer the function output is to zero, the fitter the in
 
 A scaling window is used to translate this smaller-is-better fitness regime into a fitness proportionate selection scheme.
 When calculating the selection probability of an individual its fitness is subtracted from the fitness of the worst individual from the past 5 generations.
-This value is used when calculating the size of an individuals 'slice' on the roulette wheel.
+This value is used when calculating the size of an individual's 'slice' on the fitness-proportionate roulette wheel.
 This also allows small variations in the population to standout relative to the rest of the population.
 
 Table \ref{tab:parameter-table}, reproduced from the original paper, contains the algorithm characteristics used in the experiments.
