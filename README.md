@@ -4,7 +4,6 @@ This paper can be found [here](https://cs.gmu.edu/~mpotter/pubs/ppsn94.pdf).
 The project is discussed in detail in the [Project Report](Report.pdf).
 
 This project was submitted for the award of an MEng in Electronics with Computer Systems during my 4th year at the University of Southampton.
-The project 
 
 **Disclaimer:** This project has been made public purely for the purposes of creating a portfolio. 
 If you are currently a student and Southampton do not attempt to submit some or all of this project as your own work. 
