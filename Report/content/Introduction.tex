@@ -1,0 +1,48 @@
+\section{Introduction} \label{sec:introduction}
+
+In this assignment, the paper titled: \textit{A Cooperative Coevolutionary Approach to Function Optimisation}\cite{original-paper} was chosen for reimplementation.
+The paper presents a framework for a Cooperative Coevolutionary Genetic Algorithm (CCGA) and compares its performance with a standard Genetic Algorithm (GA) as a function optimiser.
+
+The functions to be optimised were chosen for being \textit{``highly multi-modal''}.
+These functions are referred to as the Rastrigin, Schwefel, Griewangk, and Ackley functions\cite{functions-1,functions-2,functions-3}.
+Each of these functions has a global minimum of zero provided that the set of parameters fed into it are bounded by set values.
+The optimisation task presented in the paper is to evolve the set of function parameters that give an output of zero.
+The performance of each algorithm is tested on each function individually.
+
+In the standard GA, the individuals being evolved are bit-strings representing every parameter.
+The fitness of each individual is calculated by by splitting the bit-string into the parameters and running them through the function.
+In the CCGA, each parameter is represented by its own population of bit-strings.
+Each population is evaluated in a round-robin fashion.
+The fitness of each individual is calculated by combining it with the best individuals from each of the other populations and running this set through the function.
+An initial fitness value is assigned before the first generation by evaluating each individual with a random individual from each population.
+In both algorithms, the closer the function output is to zero, the fitter the individual.
+
+A scaling window is used to translate this smaller-is-better fitness regime into a fitness proportionate selection scheme.
+When calculating the selection probability of an individual its fitness is subtracted from the fitness of the worst individual from the past 5 generations.
+This value is used when calculating the size of an individual's 'slice' on the fitness-proportionate roulette wheel.
+This also allows small variations in the population to standout relative to the rest of the population.
+
+Table \ref{tab:parameter-table}, reproduced from the original paper, contains the algorithm characteristics used in the experiments.
+Pseudo code for the algorithms implemented can be found in \cite{original-paper}.
+
+
+\begin{table} [h]
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Characteristic}      & \textbf{Value}                       \\
+        \hline
+        Representation          & Binary (16 bits per function parameter)   \\
+        Selection               & Fitness Proportionate                     \\
+        Fitness Scaling         & Scaling Window Technique (width 5)        \\
+        Elitist Strategy        & Single copy of best individual preserved  \\
+        Genetic Operators       & Two-point crossover and bit-flip mutation \\
+        Mutation Probability    & 1/chromlength                             \\
+        Crossover Probability   & 0.6                                       \\
+        Population Size         & 100                                       \\
+        Simulation Length       & 100000 function evaluations               \\
+        \hline
+
+    \end{tabular}
+    \caption{A table showing the characteristics of the algorithms used to perform the experiments. Reproduced from \cite{original-paper}}
+    \label{tab:parameter-table}
+\end{table}

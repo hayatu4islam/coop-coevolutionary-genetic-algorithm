@@ -1,14 +1,15 @@
-"""Main Data Gather
+"""
+Main Data Gather
+================
 
 The project's main file. All data generated for this project is done so in here.
-No plots are produced however. The data is gathered and saved to disk to be plotted
+No plots are produced. The data is gathered and saved to disk to be plotted
 in MATLAB.
 """
 
 import numpy as np
 import os
 import sys
-import threading
 
 from functions import (
     rastrigin,
@@ -27,19 +28,24 @@ from ga_experiment import GAExperiment
 from ccga_experiment import CCGAExperiment
 
 
-def run_ga_experiment(fitness_func, func_dict, iterations, num_experiments):
+def run_ga_experiment(
+    fitness_func, func_dict, iterations, num_experiments, extension=0
+):
     """Runs all standard ga experiments and saves results to disk"""
 
-    # Run Rastragin Experiments
+    GAs = [
+        GAExperiment(fitness_func, func_dict, iterations, _extension=extension)
+        for i in range(0, num_experiments)
+    ]
+
+    print("Finished Generating GAs")
 
     iteration_data = []
     sum_fitness_data = []
 
     sum_fitness_data = np.array([0.0] * int(iterations / 100))
 
-    for i in range(0, num_experiments):
-        GA = GAExperiment(fitness_func, func_dict, iterations)
-        print("GAs generated")
+    for i, GA in enumerate(GAs):
         iteration_data, fitness_data = GA.run_experiment()
         sum_fitness_data += np.array(fitness_data)
 
@@ -58,7 +64,6 @@ def run_ccga_experiment(
     if param_num == -1:
         param_num = func_dict["n"]
 
-    # Run Rastragin Experiments
     GAs = [
         CCGAExperiment(fitness_func, func_dict, iterations, param_num)
         for i in range(0, num_experiments)
@@ -105,35 +110,34 @@ def write_to_file(iter_data, avr_fitness_data, filepath):
 def run_ga_experiments(experiment_num):
 
     print("GA Experiments")
+    output_data_path = "collected_data\\ga\\"
 
     # Run standard GA experiments
     print("Rastrigin Experiment")
     rast_iter, rast_avr_fitness = run_ga_experiment(
         rastrigin, rast_dict, 100000, experiment_num
     )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ga_experiment(
         schwefel, schwe_dict, 100000, experiment_num
     )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ga_experiment(
         griewangk, grie_dict, 100000, experiment_num
     )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
 
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ga_experiment(
         ackley, ackl_dict, 100000, experiment_num
     )
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
 
     # Write data to disk
-    output_data_path = "collected_data\\ga\\"
-
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ga_rast.txt")
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ga_schw.txt")
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ga_grie.txt")
-    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ga_ackl.txt")
 
 
 def run_ccga_experiments(experiment_num):
@@ -146,35 +150,84 @@ def run_ccga_experiments(experiment_num):
     rast_iter, rast_avr_fitness = run_ccga_experiment(
         rastrigin, rast_dict, 100000, experiment_num
     )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
 
     print("Schwefel Experiment")
     schw_iter, schw_avr_fitness = run_ccga_experiment(
         schwefel, schwe_dict, 100000, experiment_num
     )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
 
     print("Griewangk Experiment")
     grie_iter, grie_avr_fitness = run_ccga_experiment(
         griewangk, grie_dict, 100000, experiment_num
     )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
 
     # Run standard GA experiments
     print("Ackley Experiment")
     ackl_iter, ackl_avr_fitness = run_ccga_experiment(
         ackley, ackl_dict, 100000, experiment_num
     )
-
-    write_to_file(rast_iter, rast_avr_fitness, output_data_path + "ccga_rast.txt")
-    write_to_file(schw_iter, schw_avr_fitness, output_data_path + "ccga_schw.txt")
-    write_to_file(grie_iter, grie_avr_fitness, output_data_path + "ccga_grie.txt")
     write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + "ccga_ackl.txt")
+
+
+def run_exga_experiments(experiment_num, extension):
+
+    print("EXGA_{} Experiments".format(extension))
+
+    expname = "exga_" + str(extension)
+
+    output_data_path = "collected_data\\{}\\".format(expname)
+
+    # Run standard GA experiments
+    print("Rastrigin Experiment")
+    rast_iter, rast_avr_fitness = run_ga_experiment(
+        rastrigin, rast_dict, 100000, experiment_num, extension=1
+    )
+    write_to_file(rast_iter, rast_avr_fitness, output_data_path + expname + "_rast.txt")
+
+    print("Schwefel Experiment")
+    schw_iter, schw_avr_fitness = run_ga_experiment(
+        schwefel, schwe_dict, 100000, experiment_num, extension=1
+    )
+    write_to_file(schw_iter, schw_avr_fitness, output_data_path + expname + "_schw.txt")
+
+    print("Griewangk Experiment")
+    grie_iter, grie_avr_fitness = run_ga_experiment(
+        griewangk, grie_dict, 100000, experiment_num, extension=1
+    )
+    write_to_file(grie_iter, grie_avr_fitness, output_data_path + expname + "_grie.txt")
+
+    print("Ackley Experiment")
+    ackl_iter, ackl_avr_fitness = run_ga_experiment(
+        ackley, ackl_dict, 100000, experiment_num, extension=1
+    )
+    write_to_file(ackl_iter, ackl_avr_fitness, output_data_path + expname + "_ackl.txt")
 
 
 if __name__ == "__main__":
 
-    # Run GA experiments if requested
-    if sys.argv[1] in ["ga", "both"]:
-        run_ga_experiments(15)
+    if len(sys.argv) > 2:
+        experiment_num = int(sys.argv[2])
+    else:
+        experiment_num = 15
 
-    # Run CCGA experiments
-    if sys.argv[1] in ["ccga", "both"]:
-        run_ccga_experiments(15)
+    # Run GA experiments if requested
+    if sys.argv[1] in ["ga", "all"]:
+        run_ga_experiments(experiment_num)
+
+    # Run CCGA experiments if requested
+    if sys.argv[1] in ["ccga", "all"]:
+        run_ccga_experiments(experiment_num)
+
+    # Run EXGA experiments if requested
+    if sys.argv[1] in ["exga", "all"]:
+        
+        # Set extension number from cmd, default to 1
+        extension = 1
+        
+        if len(sys.argv) > 3:
+            extension = int(sys.argv[3])
+
+        run_exga_experiments(experiment_num, extension)

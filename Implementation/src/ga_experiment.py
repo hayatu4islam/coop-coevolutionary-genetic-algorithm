@@ -1,6 +1,9 @@
-""" GA Experiment
+""" 
+GA Experiment
+=============
 
 This file implements a class which is used to complete all standard GA experiments.
+This includes the extension.
 The CCGA Experiment class is based on this.
 """
 
@@ -17,7 +20,12 @@ from individual import Individual
 
 class GAExperiment:
     def __init__(
-        self, _fitness_func, _func_dict, _evaluations=100000, _func_param_num=-1
+        self,
+        _fitness_func,
+        _func_dict,
+        _evaluations=100000,
+        _func_param_num=-1,
+        _extension=0,
     ):
 
         self.fitness_func = _fitness_func
@@ -68,6 +76,27 @@ class GAExperiment:
         self.evaluation_data = []
         """An array containing the function evaluation number that each corresponding
         element in fitness_data was collected."""
+
+        #### Extension ####
+
+        self.crossover = None
+        """A placeholder for the function which performs crossover.
+        It is selected based on the value of the _extension argument to be either
+        standart two_point_crossover or the extension function n_chunk_crossover.
+        """
+
+        if _extension == 0:
+            self.crossover = self.two_point_crossover
+        elif _extension == 1:
+            self.crossover = self.n_chunk_crossover
+
+        self.extension = _extension
+        """Determins which extension to use.
+        If 0: normal GA.
+        If 1: n_chunk crossover
+        If 2: n individual crossover""" 
+
+        #### End Extension ####
 
         # Update the fitnesses of the pops to prepare for the start of the algorithm
         self.update_fitnesses()
@@ -178,9 +207,26 @@ class GAExperiment:
 
             # Crossover chance of 0.6
             if random.random() < 0.6:
-                ind1 = self.select_new_ind(roulette_wheel)
-                ind2 = self.select_new_ind(roulette_wheel)
-                new_ind = self.two_point_crossover(ind1, ind2)
+
+                # Perform normal 2 parent crossover
+                if self.extension in [0,1]:
+                    ind1 = self.select_new_ind(roulette_wheel)
+                    ind2 = self.select_new_ind(roulette_wheel)
+                    new_ind = self.crossover(ind1, ind2)
+                
+                # Perform either an N parent crossover or a standard two point crossover
+                # This allows an individual to be made from genes of many parents 
+                # And for genes to be split with two point crossover.
+                else:
+                    if random.random() < 0.8: 
+                        parent_list = [self.select_new_ind(roulette_wheel) for i in range(0, self.param_num)]
+                        new_ind = self.n_ind_crossover(parent_list)
+
+                    else:
+                        ind1 = self.select_new_ind(roulette_wheel)
+                        ind2 = self.select_new_ind(roulette_wheel)
+                        new_ind = self.two_point_crossover(ind1, ind2)
+                
 
             else:
                 new_ind = self.select_new_ind(roulette_wheel)
@@ -192,10 +238,9 @@ class GAExperiment:
     def get_roulette_wheel(self):
         """Generate the proportional fitness roulette wheel for the current population
 
-        Perform a cumulative sum of the population fitnesses and divide the result
-        through by the max population. This will leave an array of floats between
-        0 and 1. By seeing where a random number in that range falls individuals
-        can be selected proportionally to their fitness.
+        Perform a cumulative sum of the population fitnesses. 
+        By seeing where a random number in that range falls individuals can be selected #
+        proportionally to their fitness.
 
         Since a lower fitness value is better we use the scaling window in reverse,
         subtracting the pop fitness from it. This makes smaller pops take up
@@ -265,6 +310,73 @@ class GAExperiment:
 
         return ind
 
+    ####EXTENSION####
+
+    def n_chunk_crossover(self, ind1: Individual, ind2: Individual) -> Individual:
+        """Create a new individual by taking parameter chunks from each parent at
+        random.
+
+        A combination of n-point crossover and uniform crossover.
+        It has property of randomly sampling each parent to make the child that
+        uniform crossover uses but, it respects the boundaries of the parameters.
+        """
+
+        # First create a blank bitarray to store the new child in.
+        new_bit_arr = BitArray("uint:{}=0".format(self.pop_width))
+
+        # Get the bitarrays of the parents
+        ind1_bit_arr = ind1.bit_arr
+        ind2_bit_arr = ind2.bit_arr
+
+        # Generate an N value array of random numbers to decide which
+        # chunks come from which parent
+        chunk_rands = np.random.rand(self.param_num).tolist()
+
+        # Assign each chunk in the new bitarray with the equivalent chunk
+        # from a randomly selected parent.
+        for i, ind_idx in enumerate(range(0, self.param_num * 16, 16)):
+
+            # Define the chunk start and ends
+            start = ind_idx
+            end = ind_idx + 16
+
+            if chunk_rands[i] < 0.5:
+                new_bit_arr[start:end] = ind1_bit_arr[start:end]
+
+            else:
+                new_bit_arr[start:end] = ind2_bit_arr[start:end]
+
+        return Individual(new_bit_arr)
+
+    def n_ind_crossover(self, ind_list) -> Individual:
+        """Create a new individual by taking parameter chunks from a number of
+        parents equal to the number of parameters in being evaluated.
+
+        The is an extension of the n_chunk_crossover designed above. 
+        It is designed to mimic the use of multiple populations as seen in 
+        the CCGA as closely as possible.
+        """
+
+        # First create a blank bitarray to store the new child in.
+        new_bit_arr = BitArray("uint:{}=0".format(self.pop_width))
+
+        # Get the bitarrays of the parents
+        bit_arrs = [ind.bit_arr for ind in ind_list]
+
+        # Assign each chunk in the new bitarray with the equivalent chunk
+        # from a randomly selected parent.
+        for i, ind_idx in enumerate(range(0, self.param_num * 16, 16)):
+
+            # Define the chunk start and ends
+            start = ind_idx
+            end = ind_idx + 16
+
+            # Select a parent at random and take their parameter
+            rand_ind_bit_arr = random.choice(bit_arrs)
+            new_bit_arr[start:end] = rand_ind_bit_arr[start:end]
+
+        return Individual(new_bit_arr)
+
 
 from functions import (
     rastrigin,
@@ -306,19 +418,59 @@ def main():
         print(rast_ga_exp_big.pop[0].bit_arr)
         print(rast_ga_exp_big.mutate(rast_ga_exp_big.pop[0]).bit_arr)
 
+        # Test extension two point crossover
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10, 6)
+        ind1 = rast_ga_ext.pop[0]
+        ind2 = rast_ga_ext.pop[1]
+        child = rast_ga_ext.n_chunk_crossover(ind1, ind2)
+
+        print("N Chunk Cross Over Test")
+        print(ind1.bit_arr.hex)
+        print(ind2.bit_arr.hex)
+        print(child.bit_arr.hex)
+
+        # Test n_ind_crossover
+        print("N Ind Crossover test")
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10, 4)
+        pops = rast_ga_ext.pop[0:3]
+
+        [print(pop.bit_arr.hex) for pop in pops]
+        print(rast_ga_ext.n_ind_crossover(pops).bit_arr.hex)
+
         # Run Rastigin test
+        print("Standard Rastrigin Test")
+
         rast_ga_exp = GAExperiment(rastrigin, rast_dict, 10000)
+        test_pop = rast_ga_exp.pop.copy()
 
         rast_evalus, rast_fitness = rast_ga_exp.run_experiment()
 
-        fig, ax = plt.subplots()
-        ax.plot(rast_evalus, rast_fitness)
-        plt.show()
+        fig, standard_ax = plt.subplots()
+        standard_ax.plot(rast_evalus, rast_fitness)
+        plt.legend("GA")      
 
         pop = rast_ga_exp.pop
 
-        for evaluation, fitness in zip(rast_evalus, rast_fitness):
-            print(evaluation, "\t", fitness)
+        # Run n_chunk_crossover test
+        print("n_chunk Rastrigin Test")
+
+        rast_ga_ext = GAExperiment(rastrigin, rast_dict, 10000, _extension=1)
+
+        ext_evalus, ext_fitness = rast_ga_ext.run_experiment()
+
+        standard_ax.plot(ext_evalus, ext_fitness)
+        plt.legend("EXGA_1")      
+
+        # Run n_ind_crossover test
+        print("n_ind Rastrigin Test")
+
+        rast_ga_ext_n_ind = GAExperiment(rastrigin, rast_dict, 10000, _extension=2)
+        n_ind_evalus, n_ind_fitness = rast_ga_ext_n_ind.run_experiment()
+
+        standard_ax.plot(n_ind_evalus, n_ind_fitness)
+        plt.legend(["GA", "EXGA_1", "EXGA_2"])        
+        
+        plt.show()
 
     except AssertionError as e:
         print("Assertion Failed!")

@@ -1,7 +1,9 @@
-""" GA Experiment
+""" 
+CCGA Experiment
+=============
 
-This file implements a class which is used to complete all standard GA experiments.
-The CCGA Experiment class is based on this.
+This file implements a class that is used to perform all CCGA experiments.
+It is based off the ga_experiments file.
 """
 
 from bitstring import BitArray
@@ -243,10 +245,9 @@ class CCGAExperiment:
     def get_roulette_wheel(self, pop, scaling_factor):
         """Generate the proportional fitness roulette wheel for the current population
 
-        Perform a cumulative sum of the population fitnesses and divide the result
-        through by the max population. This will leave an array of floats between
-        0 and 1. By seeing where a random number in that range falls individuals
-        can be selected proportionally to their fitness.
+        Perform a cumulative sum of the population fitnesses. 
+        By seeing where a random number in that range falls individuals can be selected #
+        proportionally to their fitness.
 
         Since a lower fitness value is better we use the scaling window in reverse,
         subtracting the pop fitness from it. This makes smaller pops take up
